@@ -146,8 +146,8 @@ const App = () => {
         <Button onClick={() => setChartStatus({ ...chartStatus, type: "m15" })}>15M</Button>
         <Button onClick={() => setChartStatus({ ...chartStatus, type: "h1" })}>1H</Button>
         <Button onClick={() => setChartStatus({ ...chartStatus, type: "h4" })}>4H</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "d1" })}>D</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "w1" })}>W</Button>
+        {/*<Button onClick={() => setChartStatus({ ...chartStatus, type: "d1" })}>D</Button>
+        <Button onClick={() => setChartStatus({ ...chartStatus, type: "w1" })}>W</Button>*/}
       </ButtonGroup>
       <ButtonGroup color="primary" aria-label="outlined primary button group">
         <IconButton onClick={stop} color="primary" aria-label="upload picture" component="span">

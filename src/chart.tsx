@@ -23,7 +23,11 @@ import { last, timeIntervalBarWidth } from "react-stockcharts/lib/utils";
 import { LabelAnnotation, Label, Annotate } from "react-stockcharts/lib/annotation";
 //@ts-ignore
 import { ema, wma, sma, tma } from "react-stockcharts/lib/indicator";
-import { OHLCV, ChartType, Indicator, Transaction } from "./types";
+//@ts-ignore
+import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale";
+//@ts-ignore
+import algo from "react-stockcharts/lib/algorithm";
+import { OHLCV, ChartType, Indicator, Transaction, SMA } from "./types";
 
 interface Props {
     type: string
@@ -36,9 +40,9 @@ interface Props {
 }
 let CandleStickChart: React.FC<Props> = (props) => {
 
-    const { type, width, data, ratio, chartType, indicator, transactions } = props;
+    const { type, width, data: initialData, ratio, chartType, indicator, transactions } = props;
 
-    const getWidthByChartType = (type: ChartType) => {
+    /*const getWidthByChartType = (type: ChartType) => {
         switch (type) {
             case 'm5':
                 return timeIntervalBarWidth(utcMinute.every(5))
@@ -51,7 +55,7 @@ let CandleStickChart: React.FC<Props> = (props) => {
             default:
                 return timeIntervalBarWidth(utcHour)
         }
-    }
+    }*/
 
     const sameDateByChartType = (type: ChartType, d1: Moment, d2: Moment) => {
         switch (type) {
@@ -68,37 +72,96 @@ let CandleStickChart: React.FC<Props> = (props) => {
         }
     }
 
+    const createSMA = (data: SMA) => {
+        return sma()
+            .id(0)
+            .options({ windowSize: data.window })
+            .merge((d: any, c: any) => { d["sma" + data.window] = c; })
+            .accessor((d: any) => d["sma" + data.window]);
+    }
     const sma20 = sma()
+        .id(0)
         .options({ windowSize: 20 })
         .merge((d: any, c: any) => { d.sma20 = c; })
         .accessor((d: any) => d.sma20);
 
-    const annotationProps = {
+    const sma50 = sma()
+        .options({ windowSize: 50, })
+        .merge((d: any, c: any) => { d.sma50 = c; }) // Required, if not provided, log a error
+        .accessor((d: any) => d.sma50) // Required, if not provided, log an error during calculation
+        .stroke("blue"); // Optional
+
+    const buySell = algo()
+        .windowSize(2)
+        .accumulator(([prev, now]: any) => {
+            //console.log("now", now, now.low, now.date)
+            const { date } = now;
+            for (let i = 0; i < transactions.length; i++) {
+                //console.log("now2", now, now.low, now.date, transactions[i].date)
+                const transaction = transactions[i]
+                const isSame = sameDateByChartType(chartType, moment(date), transaction.date)
+                if (isSame) {
+                    if (transaction.amount > 0) {
+                        return "LONG"
+                    } else if (transaction.amount < 0) {
+                        return "SHORT"
+                    }
+                }
+            }
+        })
+        .merge((d: any, c: any) => { d.longShort = c; });
+
+    const defaultAnnotationProps = {
         fontFamily: "Glyphicons Halflings",
         fontSize: 20,
-        fill: "#060F8F",
         opacity: 0.8,
-        text: (data: any) => {
-            console.log("text: ", data)
-            return "Buy"
-        },
-        y: (data: any) => {
-            console.log("yscale: ", data)
-            return data.yScale.range()[0]
-        },
         onClick: console.log.bind(console),
-        tooltip: (d: any) => timeFormat("%B")(d.date),
-        onMouseOver: console.log.bind(console),
     };
-    const xAccessor = (d: any) => d.date;
+
+    const longAnnotationProps = {
+        ...defaultAnnotationProps,
+        fill: "#006517",
+        text: "\ue093",
+        y: ({ yScale, datum }: any) => yScale(datum.low) + 20,
+        tooltip: "Go long",
+    };
+
+    const shortAnnotationProps = {
+        ...defaultAnnotationProps,
+        fill: "#E20000",
+        text: "\ue094",
+        y: ({ yScale, datum }: any) => yScale(datum.high),
+        tooltip: "Go short",
+    };
+    //const xAccessor = (d: any) => d.date;
     /*const xExtents = [
         xAccessor(last(data)),
         xAccessor(data[data.length - 100])
     ];*/
-    console.log("render: ", data)
+    const calculatedData = buySell(sma20(sma50(initialData)));
+    const xScaleProvider = discontinuousTimeScaleProvider
+        .inputDateAccessor((d: any) => d.date);
+    const {
+        data,
+        xScale,
+        xAccessor,
+        displayXAccessor,
+    } = xScaleProvider(calculatedData);
+    console.log("render: ", initialData, data, sma20.accessor(), sma20.stroke())
     const start = xAccessor(last(data));
     const end = xAccessor(data[Math.max(0, data.length - 150)]);
     const xExtents = [start, end];
+
+
+    const createIndicatorLayers = () => {
+        const layers: any = []
+        indicator.sma.forEach((data) => {
+            layers.push(
+                <LineSeries yAccessor={sma20.accessor()} stroke={sma20.stroke()} />
+            )
+        })
+        return layers
+    }
     return (
         <ChartCanvas height={400}
             ratio={ratio}
@@ -108,29 +171,23 @@ let CandleStickChart: React.FC<Props> = (props) => {
             seriesName="MSFT"
             data={data}
             xAccessor={xAccessor}
-            xScale={scaleTime()}
+            displayXAccessor={displayXAccessor}
+            xScale={xScale}
             xExtents={xExtents}>
 
             <Chart id={1} yExtents={[(d: any) => [d.high, d.low], sma20.accessor()]}>
                 <XAxis axisAt="bottom" orient="bottom" ticks={6} />
                 <YAxis axisAt="left" orient="left" ticks={5} />
                 {/*<CandlestickSeries width={timeIntervalBarWidth(utcDay)} />*/}
-                <CandlestickSeries width={getWidthByChartType(chartType)} />
-                <LineSeries yAccessor={sma20.accessor()} stroke={sma20.stroke()} />
-                <CurrentCoordinate yAccessor={sma20.accessor()} fill={sma20.stroke()} />
-                <Annotate with={LabelAnnotation}
-                    when={(d: any) => {
-                        console.log("annotate: ", moment(d.date))
-                        for (let i = 0; i < transactions.length; i++) {
-                            const isSame = sameDateByChartType(chartType, moment(d.date), transactions[i].date)
-                            if (isSame) {
-                                return true
-                            }
-                        }
+                <CandlestickSeries />
 
-                        return false /* some condition */
-                    }}
-                    usingProps={annotationProps} />
+                <LineSeries yAccessor={sma20.accessor()} stroke={sma20.stroke()} />
+                <LineSeries yAccessor={sma50.accessor()} stroke={sma50.stroke()} />
+                <CurrentCoordinate yAccessor={sma20.accessor()} fill={sma20.stroke()} />
+                <Annotate with={LabelAnnotation} when={(d: any) => d.longShort === "LONG"}
+                    usingProps={longAnnotationProps} />
+                <Annotate with={LabelAnnotation} when={(d: any) => d.longShort === "SHORT"}
+                    usingProps={shortAnnotationProps} />
             </Chart>
         </ChartCanvas>
     );
