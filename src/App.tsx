@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import io from "socket.io-client";
 //@ts-ignore
 import { TypeChooser } from "react-stockcharts/lib/helper";
 import Chart from './chart';
@@ -15,6 +16,8 @@ import SkipPrevious from '@material-ui/icons/SkipPrevious';
 import moment from 'moment'
 import { Typography } from '@material-ui/core';
 import { Data, ChartType, OHLCV, Indicator } from './types';
+
+const socket: SocketIOClient.Socket = io('http://localhost:8000');
 
 // TODO
 export const useGetDataSet = () => {
@@ -56,6 +59,19 @@ export const useGetDataSet = () => {
   return { "getDataSet": getDataSet, "dataset": data, "status": status }
 }
 
+const emittest = async () => {
+  while (true) {
+    console.log("emit")
+    await timeout(1000)
+    //socket.emit("event", { value: "testtest" })
+  }
+}
+
+async function timeout(ms: number) {
+  await new Promise(resolve => setTimeout(resolve, ms));
+  return
+}
+
 const App = () => {
 
   const [data, setData] = useState<Data>(new Data())
@@ -64,7 +80,11 @@ const App = () => {
   const [chartStatus, setChartStatus] = useState<{ type: ChartType }>({ type: "h1" })
 
   useEffect(() => {
+    console.log("recieve message")
+    socket.on("connect", () => console.log("connected!"));
+    socket.on("transactionstest", (data: any) => console.log("transactions", data));
     getDataSet()
+    //emittest()
   }, [])
 
   // useRunCommandの終了処理
