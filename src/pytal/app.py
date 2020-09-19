@@ -8,7 +8,7 @@ import socketio as sioclient
 
 sio = sioclient.Client() 
 
-app = Flask(__name__, static_folder="./build/static", template_folder="./build")
+app = Flask(__name__, static_folder="./monitor/build/static", template_folder="./monitor/build")
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
