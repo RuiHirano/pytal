@@ -82,7 +82,7 @@ const App = () => {
   useEffect(() => {
     console.log("recieve message")
     socket.on("connect", () => console.log("connected!"));
-    socket.on("transactionstest", (data: any) => console.log("transactions", data));
+    socket.on("transactions", (data: any) => console.log("transactions", data));
     getDataSet()
     //emittest()
   }, [])

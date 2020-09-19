@@ -17,7 +17,7 @@ def index():
     return render_template("index.html")
 
 @socketio.on('transactions')
-def send_transactions_to_ui(message):
+def send_transactions_to_monitor(message):
     print("get message", message)
     message ="this is test message!!!!!!!!"
     emit('transactions', {'data': 'got it!'}, broadcast=True)
@@ -44,8 +44,4 @@ def run_server():
 
 
 if __name__ == "__main__":
-    print("running client...")
-    thread = threading.Thread(target=run_client)
-    thread.start()
-    print("running server...")
-    socketio.run(app, host='0.0.0.0', port=8000)
+    run_server()
