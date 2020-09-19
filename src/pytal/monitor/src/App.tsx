@@ -1,101 +1,43 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import io from "socket.io-client";
 //@ts-ignore
 import { TypeChooser } from "react-stockcharts/lib/helper";
 import Chart from './chart';
-import { getData, getM1Data, getM5Data, getM15Data, getH1Data, getH4Data, getTransactionData } from "./utils"
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
-import IconButton from '@material-ui/core/IconButton';
-import PlayArrow from '@material-ui/icons/PlayArrow';
-import Stop from '@material-ui/icons/Stop';
-import SkipNext from '@material-ui/icons/SkipNext';
-import SkipPrevious from '@material-ui/icons/SkipPrevious';
-import moment from 'moment'
 import { Typography } from '@material-ui/core';
 import { Data, ChartType, OHLCV, Indicator } from './types';
+import { fetchData } from './utils/api';
+import { useAsync } from 'react-async-hook';
 
-const socket: SocketIOClient.Socket = io('http://localhost:8000');
-
-// TODO
-export const useGetDataSet = () => {
-  const [status, setStatus] = useState({ Type: "NONE", Progress: 0, Log: "", Error: "", Loading: false })
-  const [data, setData] = useState<Data>(new Data())
-  //const files: FileInfo[] = useSelector((state: ReduxState)=> state.App.Files)
-
-  const getDataSet = useCallback(async () => {
-    try {
-      // Loading開始
-      setStatus({ Progress: 0, Log: "", Error: "", Loading: true, Type: "RUNNING" })
-
-      const m5data = await getM5Data()
-      const m15data = await getM15Data()
-      const h1data = await getH1Data()
-      const h4data = await getH4Data()
-      const transactions = await getTransactionData()
-      const data: Data = new Data()
-      console.log("debug: ", m5data, m15data, h1data, h4data, transactions)
-      data.setChart(m5data, "m5")
-      data.setChart(m15data, "m15")
-      data.setChart(h1data, "h1")
-      data.setChart(h4data, "h4")
-      data.setTransaction(transactions)
-
-      setData(data)
-      console.log("data2: ", data)
-
-      // Loading終了
-      setStatus((preStatus) => ({ ...preStatus, Progress: 100, Loading: false, Type: "FINISHED" }))
-
-    } catch (err) {
-      console.log("error: ", err)
-      setStatus((preStatus) => ({ ...preStatus, Progress: 0, Loading: false, Error: err, Type: "RUNNING" }))
-    }
-
-  }, [status])
-
-  return { "getDataSet": getDataSet, "dataset": data, "status": status }
-}
-
-const emittest = async () => {
-  while (true) {
-    console.log("emit")
-    await timeout(1000)
-    //socket.emit("event", { value: "testtest" })
-  }
-}
-
-async function timeout(ms: number) {
-  await new Promise(resolve => setTimeout(resolve, ms));
-  return
-}
 
 const App = () => {
 
-  const [data, setData] = useState<Data>(new Data())
-  const { getDataSet, dataset, status } = useGetDataSet()
-  const [playStatus, setPlayStatus] = useState({ "play": false, "id": undefined, "speed": 1000 })
+  //const [playStatus, setPlayStatus] = useState({ "play": false, "id": undefined, "speed": 1000 })
   const [chartStatus, setChartStatus] = useState<{ type: ChartType }>({ type: "h1" })
+
+  const asyncData = useAsync(fetchData, []);
+  useEffect(() => {
+
+  }, [])
 
   useEffect(() => {
     console.log("recieve message")
-    socket.on("connect", () => console.log("connected!"));
-    socket.on("transactions", (data: any) => console.log("transactions", data));
-    getDataSet()
+    //socket.on("connect", () => console.log("connected!"));
+    //socket.on("transactions", (data: any) => console.log("transactions", data));
+    //getDataSet()
     //emittest()
   }, [])
 
   // useRunCommandの終了処理
-  useEffect(() => {
-    if (status.Type === "FINISHED") {
-      console.log("get data")
+  /*useEffect(() => {
+    if (status.Type === "FINISHED" && status.Progress === 100) {
+      console.log("get data", dataset)
       setData(dataset)
     }
-  }, [status]);
+  }, [status]);*/
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (playStatus.play === true && playStatus.id === undefined) {
       console.log("useEffect")
       const id = setInterval(() => {
@@ -152,24 +94,61 @@ const App = () => {
       clearInterval(playStatus.id)
       return { ...preStatus, speed: preStatus.speed * 2, id: undefined }
     })
-  }
+  }*/
 
-  if (status.Loading) {
+  console.log("status: ", asyncData)
+  if (asyncData.loading) {
     return <div>Loading...</div>
   }
+
+  /*return (
+    <div>
+      {asyncHero.loading && <div>Loading</div>}
+      {asyncHero.error && <div>Error: {asyncHero.error.message}</div>}
+      {asyncHero.result && (
+        <div>
+          <div>Success!</div>
+          <div>Name: {asyncHero.result.Chart.h4.length}</div>
+        </div>
+      )}
+    </div>
+  )*/
 
 
   return (
     <div>
-      <ButtonGroup color="primary" aria-label="outlined primary button group">
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "m5" })}>5M</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "m15" })}>15M</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "h1" })}>1H</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "h4" })}>4H</Button>
-        {/*<Button onClick={() => setChartStatus({ ...chartStatus, type: "d1" })}>D</Button>
-        <Button onClick={() => setChartStatus({ ...chartStatus, type: "w1" })}>W</Button>*/}
-      </ButtonGroup>
-      <ButtonGroup color="primary" aria-label="outlined primary button group">
+      {asyncData.loading && <div>Loading</div>}
+      {asyncData.error && <div>Error: {asyncData.error.message}</div>}
+      {asyncData.result && (
+        <div>
+          <ButtonGroup color="primary" aria-label="outlined primary button group">
+            {Object.entries(asyncData?.result?.chart).map(([key, value]) => {
+
+              if (value.length !== 0) {
+                switch (key) {
+                  case "m1":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "m1" })}>5M</Button>)
+                  case "m5":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "m5" })}>5M</Button>)
+                  case "m15":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "m15" })}>15M</Button>)
+                  case "m15":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "m30" })}>30M</Button>)
+                  case "h1":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "h1" })}>1H</Button>)
+                  case "h4":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "h4" })}>4H</Button>)
+                  case "d1":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "d1" })}>1D</Button>)
+                  case "w1":
+                    return (<Button onClick={() => setChartStatus({ ...chartStatus, type: "w1" })}>1W</Button>)
+                  default:
+                    break;
+                }
+              }
+            })}
+          </ButtonGroup>
+          {/*<ButtonGroup color="primary" aria-label="outlined primary button group">
         <IconButton onClick={stop} color="primary" aria-label="upload picture" component="span">
           <Stop />
         </IconButton>
@@ -182,12 +161,13 @@ const App = () => {
         <IconButton onClick={speedUp} color="primary" aria-label="upload picture" component="span">
           <SkipNext />
         </IconButton>
-      </ButtonGroup>
-      <Typography>{"speed: " + playStatus.speed}</Typography>
-      <Typography>{"chartType: " + chartStatus.type}</Typography>
-      <TypeChooser>
-        {(type: any) => <Chart type={type} data={data.Chart[chartStatus.type]} chartType={chartStatus.type} indicator={new Indicator()} transactions={data.transactions} />}
-      </TypeChooser>
+      </ButtonGroup>*/}
+          <Typography>{"chartType: " + chartStatus.type}</Typography>
+          <TypeChooser>
+            {(type: any) => <Chart type={type} data={asyncData.result?.chart[chartStatus.type]} chartType={chartStatus.type} indicator={new Indicator()} transactions={asyncData.result?.transactions} />}
+          </TypeChooser>
+        </div>
+      )}
     </div>
   );
 }

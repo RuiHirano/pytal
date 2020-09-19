@@ -99,7 +99,7 @@ let CandleStickChart: React.FC<Props> = (props) => {
             for (let i = 0; i < transactions.length; i++) {
                 //console.log("now2", now, now.low, now.date, transactions[i].date)
                 const transaction = transactions[i]
-                const isSame = sameDateByChartType(chartType, moment(date), transaction.date)
+                const isSame = sameDateByChartType(chartType, moment(date), moment(transaction.date))
                 if (isSame) {
                     if (transaction.amount > 0) {
                         return "LONG"

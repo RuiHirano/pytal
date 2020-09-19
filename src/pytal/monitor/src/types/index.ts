@@ -1,13 +1,14 @@
 import moment, { Moment } from "moment";
 import { v4 as uuid } from 'uuid';
 
-export type ChartType = "m1" | "m5" | "m15" | "h1" | "h4" | "d1" | "w1"
+export type ChartType = "m1" | "m5" | "m15" | "m30" | "h1" | "h4" | "d1" | "w1"
 
 export class Data {
-    Chart: {
+    chart: {
         m1: OHLCV[]
         m5: OHLCV[]
         m15: OHLCV[]
+        m30: OHLCV[]
         h1: OHLCV[]
         h4: OHLCV[]
         d1: OHLCV[]
@@ -16,10 +17,11 @@ export class Data {
     transactions: Transaction[]
 
     constructor() {
-        this.Chart = {
+        this.chart = {
             m1: [],
             m5: [],
             m15: [],
+            m30: [],
             h1: [],
             h4: [],
             d1: [],
@@ -30,14 +32,13 @@ export class Data {
 
     setChart(jsonArr: object[], type: ChartType) {
         try {
-
             const data: OHLCV[] = []
             jsonArr.forEach((json: any) => {
                 //console.log("date", moment(json.date))
                 if (moment(json.date).isSameOrBefore('2016-03-30') && moment(json.date).isSameOrAfter('2016-03-18')) {
 
                     data.push({
-                        date: json.date,
+                        date: moment(json.date).toDate(),
                         open: json.open,
                         high: json.high,
                         low: json.low,
@@ -48,25 +49,25 @@ export class Data {
             })
             switch (type) {
                 case "m1":
-                    this.Chart.m1 = data
+                    this.chart.m1 = data
                     break;
                 case "m5":
-                    this.Chart.m5 = data
+                    this.chart.m5 = data
                     break;
                 case "m15":
-                    this.Chart.m15 = data
+                    this.chart.m15 = data
                     break;
                 case "h1":
-                    this.Chart.h1 = data
+                    this.chart.h1 = data
                     break;
                 case "h4":
-                    this.Chart.h4 = data
+                    this.chart.h4 = data
                     break;
                 case "d1":
-                    this.Chart.d1 = data
+                    this.chart.d1 = data
                     break;
                 case "w1":
-                    this.Chart.w1 = data
+                    this.chart.w1 = data
                     break;
                 default:
                     break;
@@ -84,7 +85,7 @@ export class Data {
             jsonArr.forEach((json: any) => {
                 data.push({
                     id: json.id,
-                    date: json.date,
+                    date: moment(json.date).toDate(),
                     amount: json.amount,
                     price: json.price,
                     value: json.value,
@@ -99,14 +100,14 @@ export class Data {
 }
 
 export class OHLCV {
-    date: Moment
+    date: Date
     open: number
     high: number
     low: number
     close: number
     volume: number
 
-    constructor(date: Moment, open: number, high: number, low: number, close: number, volume: number) {
+    constructor(date: Date, open: number, high: number, low: number, close: number, volume: number) {
         this.date = date
         this.open = open
         this.high = high
@@ -117,7 +118,7 @@ export class OHLCV {
 
     setJson(json: any) {
         try {
-            this.date = json.date
+            this.date = moment(json.date).toDate()
             this.open = json.open
             this.high = json.high
             this.low = json.low
@@ -142,13 +143,13 @@ export class OHLCV {
 
 export class Transaction {
     id: string
-    date: Moment
+    date: Date
     amount: number
     price: number
     value: number  // - amount * price
     symbol: string // 株式名や通貨ペアなど
 
-    constructor(date: Moment, amount: number, price: number, value: number, symbol: string) {
+    constructor(date: Date, amount: number, price: number, value: number, symbol: string) {
         this.id = uuid()
         this.date = date
         this.amount = amount
@@ -160,7 +161,7 @@ export class Transaction {
     setJson(json: any) {
         try {
             this.id = uuid()
-            this.date = json.date
+            this.date = moment(json.date).toDate()
             this.amount = json.amount
             this.price = json.price
             this.value = json.value
