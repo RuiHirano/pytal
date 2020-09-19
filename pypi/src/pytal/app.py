@@ -43,9 +43,9 @@ def run_server():
     socketio.run(app, host='0.0.0.0', port=8000)
 
 
-#if __name__ == "__main__":
-#    print("running client...")
-#    thread = threading.Thread(target=run_client)
-#    thread.start()
-#    print("running server...")
-#    socketio.run(app, host='0.0.0.0', port=8000)
+if __name__ == "__main__":
+    print("running client...")
+    thread = threading.Thread(target=run_client)
+    thread.start()
+    print("running server...")
+    socketio.run(app, host='0.0.0.0', port=8000)

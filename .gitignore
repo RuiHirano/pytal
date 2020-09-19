@@ -9,7 +9,10 @@
 /coverage
 
 # production
-/build
+build/
+dist/
+pytal.egg-info/
+Pipfile.lock
 
 # misc
 .DS_Store
