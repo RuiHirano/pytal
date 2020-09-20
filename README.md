@@ -6,82 +6,50 @@ Python Trade Analisis UI Library for Backtest, Forex Trade and Stock Trade
 pip install pytal
 ```
 
+## Examples
+Here is simple example.
+```
+from pytal import PytalServer
+import pandas as pd
+
+if __name__ == "__main__":
+    h1_df = pd.read_csv('./data/usdjpy_1h_sample.csv')
+    h4_df = pd.read_csv('./data/usdjpy_4h_sample.csv')
+    trans_df = pd.read_csv('./data/transactions.csv')
+    mock_data = {
+        "h1": h1_df,
+        "h4": h4_df
+    }
+    
+    ps = PytalServer()
+    ps.add_data(mock_data)
+    ps.add_transactions(trans_df)
+    ps.run()
+```
+There are other examples in /examples. 
+
 ## Usage
 
 ### Run monitor server
 ```
-import sys
-from pytal.app import run_server
+from pytal import PytalServer
 
 if __name__ == "__main__":
     print("stating...")
-    run_server()
+    ps = PytalServer()
 
 ```
 You can see monitor at http://localhost:8000
 
-### Put Chart Data
+## Parameter
+### PytalServer
+| Paramater       | Type                   | Description                                                                                                                                                                                                                                                                                                         |
+| --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| add_data()    | function                    | This is fuction to add chart data (ex. stock, forex). Please input pandas dataframe with column [data, volume, open, high, low, close]      
+| add_transactions()    | function                    | This is fuction to add transaction data. Please input pandas dataframe with column [date, amount, price, symbol, value] 
+| run()    | function                    | This is fuction to run server. If success, you can see the monitor at http://localhost:8000.
 
-```
-import sys
-from pytal.app import run_server, put_chart_data
-
-if __name__ == "__main__":
-    print("stating...")
-    run_server()
-
-    data = {
-        "m15":[
-            {
-                "date": "2020-02-11 14:34:00",
-                "open": "122.34",
-                "high": "122.34",
-                "low": "122.46",
-                "close": "122.24",
-                "volume": "123.34",
-            },
-        ],
-        "h1":[
-            {
-                "date": "2020-02-11 14:34:00",
-                "open": "122.34",
-                "high": "122.34",
-                "low": "122.46",
-                "close": "122.24",
-                "volume": "123.34",
-            },
-        ],
-
-    }
-    put_chart_data(data)
-
-```
-
-### Put Transaction Data
-
-```
-import sys
-from pytal.app import run_server, put_transactions_data
-
-if __name__ == "__main__":
-    print("stating...")
-    run_server()
-
-    data = [        
-        {
-            "date": "2020-02-11 14:34:00",
-            "amount": "23.44",
-            "price": "122.34",
-            "value": "-2855.4156",   # - amount * price. if value < 0, it means short position.
-            "symbol": "MSFT",
-        },
-    ]
-
-    put_transactions_data(data)
-
-```
-
-## Using backtrade library
+## With backtrade library
 ### for Backtrader with pyfolio
 ```
 import backtrader as bt

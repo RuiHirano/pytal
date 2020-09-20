@@ -9,7 +9,7 @@ const convertToChartData = (rowData: any) => {
     const rowTransactionData = rowData["transactions"]
     keys.forEach((key: ChartType) => {
         if (rowChartData[key].length !== 0) {
-            console.log(key)
+            console.log(key, JSON.parse(rowChartData[key]))
             data.setChart(JSON.parse(rowChartData[key]), key)
         }
     })

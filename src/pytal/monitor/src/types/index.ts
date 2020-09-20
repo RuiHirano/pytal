@@ -35,17 +35,17 @@ export class Data {
             const data: OHLCV[] = []
             jsonArr.forEach((json: any) => {
                 //console.log("date", moment(json.date))
-                if (moment(json.date).isSameOrBefore('2016-03-30') && moment(json.date).isSameOrAfter('2016-03-18')) {
+                //if (moment(json.date).isSameOrBefore('2009-01-11') && moment(json.date).isSameOrAfter('2006-06-01')) {
 
-                    data.push({
-                        date: moment(json.date).toDate(),
-                        open: json.open,
-                        high: json.high,
-                        low: json.low,
-                        close: json.close,
-                        volume: json.volume,
-                    } as OHLCV)
-                }
+                data.push({
+                    date: moment(json.date).toDate(),
+                    open: json.open,
+                    high: json.high,
+                    low: json.low,
+                    close: json.close,
+                    volume: json.volume,
+                } as OHLCV)
+                //}
             })
             switch (type) {
                 case "m1":
