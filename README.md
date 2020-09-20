@@ -1,6 +1,8 @@
 # Pytal
 Python Trade Analisis UI Library for Backtest, Forex Trade and Stock Trade
 
+<img width="1307" alt="スクリーンショット 2020-09-20 10 42 40" src="https://user-images.githubusercontent.com/43264434/93692419-0e95ff00-fb2e-11ea-985d-869780058162.png">
+
 ## Instration
 ```
 pip install pytal
